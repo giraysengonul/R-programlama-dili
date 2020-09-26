@@ -1,0 +1,198 @@
+---
+title: "Bititrme_odevi"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars}
+summary(cars)
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+
+#Burada metnimizi veri tabanına ekledim ve
+
+
+#Alice dosyasının içeriğini inceledim
+
+
+
+```{r}
+library(tidyverse)
+
+Alice <- readLines("Alice.txt")
+
+#save(Alice, file="Alice.rda")
+
+#rm(Alice)
+
+#load(file = "Alice.rda")
+
+
+head(Alice)
+#metnin baş kısmı
+
+length(Alice)
+#metnin uzunluğu
+
+tail(Alice)
+#metnin sonuna bakmak için
+
+```
+
+
+#Bu kısımda metinlerin bölünmesi işlemini gerçekleştirdim
+
+
+
+```{r}
+
+Alice <- Alice[-(1:61)]
+
+Alice <- Alice[-(12621:12992)]
+
+#üstteki 2 kısımda baştaki gereksiz bilgilerin silinmesi
+#işlemi gerçeleştirdim
+
+head(Alice)
+
+Alice <- paste(Alice, collapse = " ")
+#başındaki ve sondaki gereksiz bilgileri
+#attıktan sonra şimdide boşlukları attık
+A <- strsplit(Alice, ">>>")
+
+A<- unlist(A)
+
+A <- A[-1]
+
+#buradada >> işaretini tanımasını sağladım 
+#böylece bu işaretten sonra anlayacakki yeni metne geçtiğimi.
+#ve her yeni metne geçtiğimde veritabanında kayıtta bir arttıracak
+
+A[12]
+```
+
+```{r}
+install.packages('plyr', repos = "http://cran.us.r-project.org")
+install.packages('package:ggplot2')
+library(tm)
+library(plyr)
+class(A)
+doku_vektor <- VectorSource(A)
+class(doku_vektor)
+attributes(doku_vektor)
+doku_vektor[1]
+doku_derlem <- VCorpus(doku_vektor)
+class(doku_derlem)
+doku_derlem[1]
+
+```
+
+
+
+
+```{r}
+doku_derlem <- tm_map(doku_derlem, content_transformer(tolower))
+doku_derlem <- tm_map(doku_derlem, content_transformer(removePunctuation))
+doku_derlem <- tm_map(doku_derlem, content_transformer(removeNumbers))
+doku_derlem <- tm_map(doku_derlem, removeWords, stopwords("english"))
+
+
+```
+```{r}
+
+install.packages('SnowballC')
+library(SnowballC)
+doku_derlem <- tm_map(doku_derlem, stemDocument)
+doku_derlem <- tm_map(doku_derlem, stripWhitespace)
+doku_derlem[1]
+
+```
+
+
+```{r}
+tdm <- TermDocumentMatrix(doku_derlem)
+
+
+inspect(tdm[1:4, 1:12])
+
+attributes(tdm)
+
+
+tdm$nrow
+
+tdm$ncol
+
+colnames(tdm) <- c(
+  
+   "I. Down the Rabbit-Hole",
+  "II. The Pool of Tears",
+ "III. A Caucus-Race and a Long Tale",
+  "IV. The Rabbit Sends in a Little Bill",
+   "V. Advice from a Caterpillar",
+ "VI. Pig and Pepper",
+ "VII. A Mad Tea-Party",
+"VIII. The Queen’s Croquet-Ground",
+  "IX. The Mock Turtle’s Story",
+   "X. The Lobster Quadrille",
+  "XI. Who Stole the Tarts?",
+ "XII. Alice’s Evidence"
+)
+tdm$dimnames$Docs
+
+
+findFreqTerms(tdm ,100)
+
+findAssocs(tdm, "hello", 0.80)
+
+findAssocs(tdm, c("where","hello"),c(0.8,0.90))
+
+
+tdm_sik <- removeSparseTerms(tdm,0.1)
+
+tdm_sik
+
+```
+
+
+
+```{r}
+matrix <- as.matrix(tdm_sik)
+
+frekanslar <- rowSums(matrix)
+
+head(frekanslar)
+
+toplam_isimler <- rownames(matrix)
+
+head(toplam_isimler)
+
+hist(frekanslar, col = "blue")
+
+frekanslar2 <- subset(frekanslar, frekanslar > 100)
+
+barplot(frekanslar2)
+
+```
+
+
+
+
+
